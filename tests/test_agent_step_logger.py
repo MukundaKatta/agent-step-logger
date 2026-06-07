@@ -445,3 +445,42 @@ def test_from_jsonl_preserves_indices():
     restored = StepLogger.from_jsonl(logger.to_jsonl())
     assert restored[0].index == 0
     assert restored[1].index == 1
+
+
+# ---------------------------------------------------------------------------
+# Step.to_dict / from_dict symmetry
+# ---------------------------------------------------------------------------
+
+
+def test_step_dict_roundtrip_equal():
+    s = Step(
+        index=3,
+        step_type=StepType.TOOL_CALL,
+        content="search",
+        metadata={"tool_name": "search", "args": {"q": "x"}},
+        timestamp=12.5,
+    )
+    assert Step.from_dict(s.to_dict()) == s
+
+
+def test_step_from_dict_defaults_missing_metadata():
+    d = {
+        "index": 0,
+        "step_type": "response",
+        "content": "hi",
+        "timestamp": 1.0,
+    }
+    s = Step.from_dict(d)
+    assert s.metadata == {}
+
+
+# ---------------------------------------------------------------------------
+# __getitem__ negative index
+# ---------------------------------------------------------------------------
+
+
+def test_getitem_negative_index():
+    logger = StepLogger()
+    logger.log_response("first")
+    logger.log_response("last")
+    assert logger[-1].content == "last"
